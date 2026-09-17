@@ -41,8 +41,11 @@ const PAD_V = 40;
 const STAGGER = 20;
 
 const MUTED_LINE = "rgba(140, 140, 150, 0.35)";
-const MUTED_LABEL = "rgba(180, 180, 190, 0.45)";
-const MUTED_NAME = "rgba(160, 160, 170, 0.4)";
+const MUTED_LABEL = "rgba(120, 120, 130, 0.4)";
+const MUTED_NAME = "rgba(120, 120, 130, 0.35)";
+const DEFAULT_PERCENT = "#18181b"; // zinc-900 — readable on light Framer bg
+const DEFAULT_NAME = "#52525b"; // zinc-600
+const DEFAULT_LINE = "rgba(82, 82, 91, 0.55)";
 
 interface SlabLayout {
   color: string;
@@ -355,7 +358,7 @@ function LeaderLines({
           ? MUTED_LINE
           : isActive
             ? tranche.color
-            : "rgba(120, 120, 130, 0.65)";
+            : DEFAULT_LINE;
         const strokeW = isActive ? 2 : 1.4;
         const endColor = isMuted ? "rgba(160,160,170,0.5)" : tranche.color;
 
@@ -525,12 +528,12 @@ export default function CapitalStackMock({
               ? MUTED_LABEL
               : isActive
                 ? tranche.color
-                : "rgba(245, 245, 245, 0.92)";
+                : DEFAULT_PERCENT;
             const nameColor = isMuted
               ? MUTED_NAME
               : isActive
                 ? tranche.color
-                : "rgba(200, 200, 205, 0.85)";
+                : DEFAULT_NAME;
 
             return (
               <div
@@ -558,9 +561,6 @@ export default function CapitalStackMock({
                     letterSpacing: "-0.02em",
                     color: percentColor,
                     fontSize: percentFontSize,
-                    textShadow: isMuted
-                      ? "none"
-                      : "0 1px 2px rgba(0,0,0,0.35)",
                     transition: "color 0.2s ease",
                   }}
                 >
@@ -573,9 +573,6 @@ export default function CapitalStackMock({
                     lineHeight: 1.2,
                     color: nameColor,
                     fontSize: nameFontSize,
-                    textShadow: isMuted
-                      ? "none"
-                      : "0 1px 2px rgba(0,0,0,0.3)",
                     transition: "color 0.2s ease",
                   }}
                 >
