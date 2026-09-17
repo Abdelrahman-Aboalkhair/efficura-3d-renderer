@@ -117,6 +117,9 @@ function SpreadDriver({
   return null;
 }
 
+const ACTIVE_SCALE = 1.08; // slight size pop on the hovered slab
+const ACTIVE_EMISSIVE = 0.22; // soft self-light so the active slab reads brighter
+
 function Slab({
   layout,
   spreadRef,
@@ -131,15 +134,62 @@ function Slab({
   onHover: (trancheIndex: number) => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const opacity = hasActive && !isActive ? 0.42 : 1;
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+  const scaleRef = useRef(1);
+  const emissiveRef = useRef(0);
+  const opacityRef = useRef(1);
+  const invalidate = useThree((s) => s.invalidate);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const mesh = meshRef.current;
-    if (!mesh) return;
+    const mat = matRef.current;
+    if (!mesh || !mat) return;
+    const dt = Math.min(delta, 0.05);
+
     const { intro, hover } = spreadRef.current;
     const offset =
       layout.dir * (INTRO_SPREAD * intro + HOVER_SPREAD * hover);
     mesh.position.y = layout.centerY + offset;
+
+    // Scale up the active slab; others stay at 1
+    const targetScale = isActive ? ACTIVE_SCALE : 1;
+    scaleRef.current = THREE.MathUtils.damp(
+      scaleRef.current,
+      targetScale,
+      12,
+      dt
+    );
+    mesh.scale.setScalar(scaleRef.current);
+
+    // Brighten active slab via emissive; dim inactive when something is focused
+    const targetEmissive = isActive ? ACTIVE_EMISSIVE : 0;
+    emissiveRef.current = THREE.MathUtils.damp(
+      emissiveRef.current,
+      targetEmissive,
+      12,
+      dt
+    );
+    mat.emissive.set(layout.color);
+    mat.emissiveIntensity = emissiveRef.current;
+
+    const targetOpacity = hasActive && !isActive ? 0.42 : 1;
+    opacityRef.current = THREE.MathUtils.damp(
+      opacityRef.current,
+      targetOpacity,
+      12,
+      dt
+    );
+    mat.opacity = opacityRef.current;
+    mat.transparent = opacityRef.current < 0.99;
+
+    // Keep demand loop alive while local tweens settle
+    if (
+      Math.abs(scaleRef.current - targetScale) > 0.001 ||
+      Math.abs(emissiveRef.current - targetEmissive) > 0.001 ||
+      Math.abs(opacityRef.current - targetOpacity) > 0.001
+    ) {
+      invalidate();
+    }
   });
 
   return (
@@ -153,11 +203,14 @@ function Slab({
     >
       <boxGeometry args={[SIDE, layout.height, SIDE]} />
       <meshStandardMaterial
+        ref={matRef}
         color={layout.color}
-        roughness={0.92}
+        roughness={0.88}
         metalness={0}
-        transparent={opacity < 1}
-        opacity={opacity}
+        emissive={layout.color}
+        emissiveIntensity={0}
+        transparent
+        opacity={1}
       />
     </mesh>
   );
