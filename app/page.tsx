@@ -21,8 +21,6 @@ export default function Page() {
       style={{
         width: "100%",
         height: "100%",
-        // Match the light band used on the Asset Skyview capital-stack section
-        background: "#f8f7f4",
       }}
     >
       <CapitalStackMock tranches={DEFAULT_TRANCHES} />
